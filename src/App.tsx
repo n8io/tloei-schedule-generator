@@ -17,7 +17,7 @@ import {
   parseScheduleUrlState,
   SCHEDULE_STATE_PARAM,
 } from '@/lib/url-state'
-import { saveWizardState, shuffleTeamNames } from '@/lib/wizard-storage'
+import { loadWizardState, saveWizardState, shuffleTeamNames } from '@/lib/wizard-storage'
 import type { WizardState } from '@/types/wizard'
 import confetti from 'canvas-confetti'
 import { Calendar, ChevronDown, Loader2, Moon, Pencil, RotateCw, Share2, Shuffle, Sun, Trash2 } from 'lucide-react'
@@ -121,8 +121,6 @@ function App() {
 
   const [phase, setPhase] = useState<AppPhase>(() => {
     if (parsedFromUrl) return 'schedule'
-    const stored = localStorage.getItem('tloei-league-wizard')
-    if (stored) return 'wizard'
     return 'landing'
   })
   const [wizardState, setWizardState] = useState<WizardState | null>(() =>
@@ -499,7 +497,11 @@ function App() {
 
           <button
             type="button"
-            onClick={() => setPhase('wizard')}
+            onClick={() => {
+              const stored = loadWizardState()
+              if (stored) saveWizardState({ ...stored, step: 1 })
+              setPhase('wizard')
+            }}
             className="bg-primary text-primary-foreground hover:bg-primary/90 flex items-center gap-2 rounded-xl px-10 py-4 text-lg font-semibold shadow-lg transition-all hover:scale-105 active:scale-100"
           >
             Build the Season Schedule
