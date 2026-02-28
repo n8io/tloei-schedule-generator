@@ -167,6 +167,7 @@ function App() {
       fireConfetti()
     } catch (e) {
       setGenerationError(e instanceof Error ? e.message : 'Schedule generation failed. Try Randomize or adjust divisions.')
+      setPhase('wizard')
     } finally {
       setIsGenerating(false)
     }
@@ -188,6 +189,7 @@ function App() {
       fireConfetti()
     } catch (e) {
       setGenerationError(e instanceof Error ? e.message : 'Schedule generation failed. Try Randomize or adjust divisions.')
+      setPhase('wizard')
     } finally {
       setIsGenerating(false)
     }
@@ -217,6 +219,7 @@ function App() {
       fireConfetti()
     } catch (e) {
       setGenerationError(e instanceof Error ? e.message : 'Schedule generation failed. Try Randomize or adjust divisions.')
+      setPhase('wizard')
     } finally {
       setIsGenerating(false)
     }
@@ -312,6 +315,7 @@ function App() {
       setPhase('schedule')
     } catch (e) {
       setGenerationError(e instanceof Error ? e.message : 'Schedule generation failed. Try Randomize or adjust divisions.')
+      setPhase('wizard')
     } finally {
       setIsGenerating(false)
     }
@@ -338,6 +342,7 @@ function App() {
       .catch((e) => {
         if (!cancelled) {
           setGenerationError(e instanceof Error ? e.message : 'Schedule generation failed. Try Randomize or adjust divisions.')
+          setPhase('wizard')
         }
       })
     return () => {
@@ -515,6 +520,7 @@ function App() {
           hasExistingSchedule={!!wizardState}
           onNavigateToSchedule={handleNavigateToSchedule}
           onWizardStateChange={setWizardState}
+          generationError={generationError}
         />
       )}
 

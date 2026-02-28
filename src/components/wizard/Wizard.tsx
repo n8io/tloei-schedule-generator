@@ -8,16 +8,25 @@ type WizardProps = {
   hasExistingSchedule: boolean
   onNavigateToSchedule: (state: WizardState) => void
   onWizardStateChange?: (state: WizardState) => void
+  /** When set, resets to divisions step so the user can adjust and retry. */
+  generationError?: string | null
 }
 
 const STEP_LABELS = ['Set up divisions', 'Generate']
 
-export function Wizard({ onComplete, hasExistingSchedule, onNavigateToSchedule, onWizardStateChange }: WizardProps) {
+export function Wizard({ onComplete, hasExistingSchedule, onNavigateToSchedule, onWizardStateChange, generationError }: WizardProps) {
   const { state, setState } = useWizardState()
 
   useEffect(() => {
     onWizardStateChange?.(state)
   }, [state, onWizardStateChange])
+
+  // When generation fails, go back to divisions step so the user can adjust and retry
+  useEffect(() => {
+    if (generationError) {
+      setState((prev) => ({ ...prev, step: 1 }))
+    }
+  }, [generationError, setState])
 
   const handleDivisionAssignmentsChange = (assignments: readonly DivisionSlot[]) => {
     setState((prev) => ({
@@ -74,7 +83,7 @@ export function Wizard({ onComplete, hasExistingSchedule, onNavigateToSchedule, 
         })}
       </div>
 
-      {state.step === 1 && (
+      {(generationError ? 1 : state.step) === 1 && (
         <DivisionsStep
           divisionAssignments={state.divisionAssignments}
           divisionNames={state.divisionNames}
