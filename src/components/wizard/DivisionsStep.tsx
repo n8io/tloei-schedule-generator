@@ -7,6 +7,7 @@ import {
   DndContext,
   DragOverlay,
   PointerSensor,
+  TouchSensor,
   useDraggable,
   useDroppable,
   useSensor,
@@ -72,7 +73,13 @@ function DraggableTeamChip({
     setDroppableRef(node)
   }
   return (
-    <div ref={setNodeRef} {...listeners} {...attributes} className="cursor-grab active:cursor-grabbing">
+    <div
+      ref={setNodeRef}
+      {...listeners}
+      {...attributes}
+      className="cursor-grab select-none active:cursor-grabbing"
+      style={{ touchAction: 'none' }}
+    >
       <TeamChip team={team} teamName={teamName} isDragging={isDragging} />
     </div>
   )
@@ -157,7 +164,10 @@ export function DivisionsStep({
   hasExistingSchedule = false,
 }: DivisionsStepProps) {
   const [activeTeam, setActiveTeam] = useState<Team | null>(null)
-  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }))
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(TouchSensor, { activationConstraint: { distance: 5 } })
+  )
 
   const unassigned = getUnassigned(divisionAssignments)
 
