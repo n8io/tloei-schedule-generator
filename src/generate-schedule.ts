@@ -12,8 +12,11 @@ const ROUND_ROBIN_WEEKS = 11
 /** Match-ups per week. */
 const MATCH_UPS_PER_WEEK = 6
 
-/** Max backtracking attempts for placing weeks 12–14. */
-const MAX_PLACEMENT_ATTEMPTS = 50
+/** Max backtracking attempts for placing weeks 12–14 (per strategy, per retry). */
+const MAX_PLACEMENT_ATTEMPTS = 150
+
+/** Internal retries for the entire placement phase before throwing. */
+const MAX_PLACEMENT_RETRIES = 3
 
 /** Max iterations for home/away balance swaps. */
 const MAX_BALANCE_ITERATIONS = 200
@@ -196,7 +199,12 @@ function generateSchedule(config: LeagueConfig, options?: GenerateScheduleOption
     return false
   }
 
-  if (!placeWeeks()) {
+  let placementSucceeded = false
+  for (let retry = 0; retry < MAX_PLACEMENT_RETRIES && !placementSucceeded; retry++) {
+    if (placeWeeks()) {
+      placementSucceeded = true
+      break
+    }
     // Fallback: try shuffled orderings until we can place 6 matchups per week
     const toPlace = secondGames.map((g, i) => ({ ...g, idx: i }))
     let fallbackOk = false
@@ -245,59 +253,66 @@ function generateSchedule(config: LeagueConfig, options?: GenerateScheduleOption
       }
     }
 
-    if (!fallbackOk) {
-      // Last resort: try shuffled orderings (same algorithm as fallback, different iteration)
-      const toPlace = secondGames.map((g, i) => ({ ...g, idx: i }))
-      for (let attempt = 0; attempt < MAX_PLACEMENT_ATTEMPTS; attempt++) {
-        const shuffled = doShuffle(toPlace)
-        const placed = new Set<number>()
-        const weeks12_14: RawMatch[][] = []
-        const hc = { ...homeCount }
+    if (fallbackOk) {
+      placementSucceeded = true
+      break
+    }
 
-        let ok = true
-        for (let w = 0; w < WEEK_COUNT - ROUND_ROBIN_WEEKS; w++) {
-          const prevWeek = weeks12_14[w - 1]
-          const prev = w === 0 ? week11Pairs : new Set((prevWeek ?? []).map((m) => pairKey(m.home, m.away)))
-          const week: RawMatch[] = []
-          const used = new Set<string>()
+    // Last resort: try shuffled orderings (same algorithm as fallback, different iteration)
+    const toPlaceLastResort = secondGames.map((g, i) => ({ ...g, idx: i }))
+    for (let attempt = 0; attempt < MAX_PLACEMENT_ATTEMPTS; attempt++) {
+      const shuffled = doShuffle(toPlaceLastResort)
+      const placed = new Set<number>()
+      const weeks12_14: RawMatch[][] = []
+      const hc = { ...homeCount }
 
-          for (const g of shuffled) {
-            if (placed.has(g.idx)) continue
-            const { a, b } = g
-            if (used.has(a) || used.has(b)) continue
-            if (prev.has(pairKey(a, b))) continue
-            const ha = hc[a] ?? 0
-            const hb = hc[b] ?? 0
-            const home = ha <= hb ? a : b
-            const away = home === a ? b : a
-            placed.add(g.idx)
-            used.add(a)
-            used.add(b)
-            hc[home] = (hc[home] ?? 0) + 1
-            week.push({ home, away, isDiv: g.isDiv, isRiv: g.isRiv })
-            if (week.length >= MATCH_UPS_PER_WEEK) break
-          }
+      let ok = true
+      for (let w = 0; w < WEEK_COUNT - ROUND_ROBIN_WEEKS; w++) {
+        const prevWeek = weeks12_14[w - 1]
+        const prev = w === 0 ? week11Pairs : new Set((prevWeek ?? []).map((m) => pairKey(m.home, m.away)))
+        const week: RawMatch[] = []
+        const used = new Set<string>()
 
-          if (week.length < MATCH_UPS_PER_WEEK) {
-            ok = false
-            break
-          }
-          weeks12_14.push(week)
+        for (const g of shuffled) {
+          if (placed.has(g.idx)) continue
+          const { a, b } = g
+          if (used.has(a) || used.has(b)) continue
+          if (prev.has(pairKey(a, b))) continue
+          const ha = hc[a] ?? 0
+          const hb = hc[b] ?? 0
+          const home = ha <= hb ? a : b
+          const away = home === a ? b : a
+          placed.add(g.idx)
+          used.add(a)
+          used.add(b)
+          hc[home] = (hc[home] ?? 0) + 1
+          week.push({ home, away, isDiv: g.isDiv, isRiv: g.isRiv })
+          if (week.length >= MATCH_UPS_PER_WEEK) break
         }
 
-        if (ok && weeks12_14.length === WEEK_COUNT - ROUND_ROBIN_WEEKS) {
-          for (const week of weeks12_14) schedule.push(week)
-          for (const t of allTeams) homeCount[t] = hc[t] ?? 0
-          fallbackOk = true
+        if (week.length < MATCH_UPS_PER_WEEK) {
+          ok = false
           break
         }
+        weeks12_14.push(week)
       }
 
-      if (!fallbackOk) {
-        throw new Error(
-          'Could not find valid placement for weeks 12–14; retrying with different team order.',
-        )
+      if (ok && weeks12_14.length === WEEK_COUNT - ROUND_ROBIN_WEEKS) {
+        for (const week of weeks12_14) schedule.push(week)
+        for (const t of allTeams) homeCount[t] = hc[t] ?? 0
+        fallbackOk = true
+        break
       }
+    }
+
+    if (fallbackOk) {
+      placementSucceeded = true
+      break
+    }
+    if (retry === MAX_PLACEMENT_RETRIES - 1) {
+      throw new Error(
+        'Could not find valid placement for weeks 12–14; retrying with different team order.',
+      )
     }
   }
 

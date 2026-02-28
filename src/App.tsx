@@ -10,6 +10,7 @@ import {
 import { Wizard } from '@/components/wizard/Wizard'
 import { shuffleDivisionTeamOrder, shuffleTeams } from '@/components/wizard/utils'
 import { wizardStateToLeagueConfig } from '@/lib/compute-rivalries'
+import { generateScheduleWithRetry } from '@/lib/schedule-with-retry'
 import { randomGeneratingMessage } from '@/lib/generating-messages'
 import {
   buildScheduleUrlState,
@@ -23,32 +24,10 @@ import confetti from 'canvas-confetti'
 import { Calendar, ChevronDown, Loader2, Moon, Pencil, RotateCw, Share2, Shuffle, Sun, Trash2 } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { generateSchedule } from '@/index'
 import type { LeagueConfig } from '@/config'
 import type { Week } from '@/models/week'
 
 const GENERATION_DELAY_MS = 2500
-const MAX_GENERATION_RETRIES = 150
-
-function isValidSchedule(s: { matchUps: unknown[] }[]): boolean {
-  return s.length === 14 && s.every((w) => w.matchUps.length === 6)
-}
-
-async function generateScheduleWithRetry(divisionAssignments: WizardState['divisionAssignments']): Promise<Week[]> {
-  let lastError: unknown
-  for (let attempt = 0; attempt < MAX_GENERATION_RETRIES; attempt++) {
-    try {
-      const assignments = attempt === 0 ? divisionAssignments : shuffleDivisionTeamOrder(divisionAssignments)
-      const config = wizardStateToLeagueConfig(assignments)
-      const s = generateSchedule(config)
-      if (isValidSchedule(s)) return s
-    } catch (e) {
-      lastError = e
-    }
-    await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()))
-  }
-  throw lastError ?? new Error('Schedule generation failed after multiple attempts. Try Regenerate or Randomize.')
-}
 
 function getScheduleConfigKey(divisionAssignments: WizardState['divisionAssignments'], regenerateKey: number): string {
   return JSON.stringify(divisionAssignments) + '-' + regenerateKey

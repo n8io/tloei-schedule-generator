@@ -341,6 +341,26 @@ describe('generateSchedule - wizard-derived config (regression: empty schedules)
   })
 })
 
+describe('generateSchedule - retry strategy failure rate', () => {
+  const RUNS = 50
+  const divisionAssignments = [...defaultLeagueConfig.divisions] as unknown as (readonly Team[])[]
+  const noDelay = () => Promise.resolve()
+
+  test(`generateScheduleWithRetry succeeds across ${RUNS} runs (shuffle + random rivalries)`, async () => {
+    const { generateScheduleWithRetry } = await import('./lib/schedule-with-retry')
+    let failures = 0
+    for (let i = 0; i < RUNS; i++) {
+      try {
+        const s = await generateScheduleWithRetry(divisionAssignments, { delay: noDelay })
+        assertScheduleNotEmptyAndValid(s)
+      } catch {
+        failures++
+      }
+    }
+    expect(failures).toBe(0)
+  })
+})
+
 describe('generateSchedule - fallback path', () => {
   test('never returns fewer than 84 matchups; throws if placement fails', () => {
     // shuffle that returns reverse order - causes placement to fail (we throw instead of partial weeks)
