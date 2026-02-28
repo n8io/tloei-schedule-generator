@@ -380,7 +380,10 @@ function App() {
         <div className="flex items-center gap-4">
           <button
             type="button"
-            onClick={() => setPhase('landing')}
+            onClick={() => {
+              setPhase('landing')
+              setSearchParams({}, { replace: true })
+            }}
             className="shrink-0 rounded-xl transition-opacity hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
             aria-label="Go to home"
           >
