@@ -432,19 +432,6 @@ function App() {
 
       {phase === 'landing' && (
         <section className="flex flex-col items-center justify-center gap-8 py-16 md:py-24" aria-label="Build schedule">
-          <button
-            type="button"
-            onClick={() => setPhase('landing')}
-            className="rounded-2xl transition-opacity hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-            aria-label="Go to home"
-          >
-            <img
-              src="https://avatars.slack-edge.com/2019-03-09/573001426103_eb2f3806c05c780d720f_132.png"
-              alt="TLOEI"
-              className="size-24 rounded-2xl md:size-32"
-              aria-hidden
-            />
-          </button>
           <div className="max-w-md space-y-4 text-center">
             <h2 className="text-3xl font-bold tracking-tight md:text-4xl">Ready to build the season?</h2>
             <p className="text-muted-foreground text-lg">
