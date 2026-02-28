@@ -20,7 +20,7 @@ import {
 import { saveWizardState, shuffleTeamNames } from '@/lib/wizard-storage'
 import type { WizardState } from '@/types/wizard'
 import confetti from 'canvas-confetti'
-import { Calendar, ChevronDown, Loader2, Pencil, RotateCw, Share2, Shuffle, Trash2 } from 'lucide-react'
+import { Calendar, ChevronDown, Loader2, Moon, Pencil, RotateCw, Share2, Shuffle, Sun, Trash2 } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { generateSchedule } from '@/index'
@@ -94,7 +94,27 @@ function LoaderOverlay({ message = 'Generating schedule...' }: { message?: strin
 
 type AppPhase = 'landing' | 'wizard' | 'schedule'
 
+const THEME_KEY = 'tloei-theme'
+
+function useTheme() {
+  const [isDark, setIsDark] = useState(() => {
+    const stored = localStorage.getItem(THEME_KEY)
+    if (stored === 'dark' || stored === 'light') return stored === 'dark'
+    return true // default dark
+  })
+
+  useEffect(() => {
+    const root = document.documentElement
+    if (isDark) root.classList.add('dark')
+    else root.classList.remove('dark')
+    localStorage.setItem(THEME_KEY, isDark ? 'dark' : 'light')
+  }, [isDark])
+
+  return { isDark, toggle: () => setIsDark((d) => !d) }
+}
+
 function App() {
+  const { isDark, toggle } = useTheme()
   const [searchParams, setSearchParams] = useSearchParams()
   const urlStateParam = searchParams.get(SCHEDULE_STATE_PARAM)
   const parsedFromUrl = urlStateParam ? parseScheduleUrlState(urlStateParam) : null
@@ -377,6 +397,14 @@ function App() {
           </div>
         </div>
         <nav className="flex shrink-0 flex-wrap items-center gap-2" aria-label="Schedule actions">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={toggle}
+            aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+          >
+            {isDark ? <Sun className="size-4" /> : <Moon className="size-4" />}
+          </Button>
           {phase === 'wizard' && wizardState && divisionsComplete && (
             <Button variant="outline" size="sm" onClick={handleViewSchedule}>
               <Calendar className="size-4" />
