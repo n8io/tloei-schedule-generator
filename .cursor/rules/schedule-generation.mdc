@@ -1,0 +1,28 @@
+---
+description: Schedule generation and display - avoid empty schedule regressions
+globs: src/App.tsx, src/components/Schedule.tsx, src/generate-schedule.ts
+alwaysApply: false
+---
+
+# Schedule Generation
+
+## Avoid empty schedule regressions
+
+The schedule display depends on two behaviors. **Do not change these without running the regression tests.**
+
+1. **App.tsx**: `leagueConfig` MUST be memoized with `useMemo` and `wizardState` as the dependency. A new object reference every render causes the Schedule effect to re-run and clears the displayed schedule.
+
+2. **Schedule.tsx**: The effect MUST NOT call `setSchedule([])` at the start. It causes empty schedules when:
+   - React Strict Mode double-mounts in dev
+   - The effect re-runs due to parent re-renders
+   - Only overwrite schedule when a valid one is generated; keep showing the previous until then.
+
+## Regression test
+
+Run before and after changes:
+
+```bash
+pnpm exec vitest run src/generate-schedule.test.ts
+```
+
+The "generateSchedule - wizard-derived config (regression: empty schedules)" describe block must pass.

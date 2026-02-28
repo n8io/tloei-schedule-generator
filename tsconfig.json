@@ -1,0 +1,30 @@
+{
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    /* Base Options: */
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "target": "es2022",
+    "allowJs": true,
+    "resolveJsonModule": true,
+    "moduleDetection": "force",
+    "isolatedModules": true,
+    "paths": { "@/*": ["./src/*"] },
+    "verbatimModuleSyntax": true,
+
+    /* Strictness */
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
+
+    /* If NOT transpiling with TypeScript: */
+    "module": "preserve",
+    "noEmit": true,
+    "allowImportingTsExtensions": true,
+
+    /* If your code doesn't run in the DOM: */
+    "lib": ["es2022", "dom"],
+    "types": ["vitest/globals", "vitest/importMeta"]
+  },
+  "exclude": ["node_modules", "dist", "coverage"]
+}

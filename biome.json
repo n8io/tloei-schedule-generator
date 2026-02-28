@@ -1,0 +1,40 @@
+{
+  "$schema": "https://biomejs.dev/schemas/1.8.3/schema.json",
+  "files": {
+    "ignore": [".changeset/**", "coverage/**", "dist/**", "node_modules/**", "vite.config.ts.timestamp*"]
+  },
+  "formatter": {
+    "enabled": true,
+    "indentStyle": "space",
+    "indentWidth": 2,
+    "lineWidth": 120,
+    "formatWithErrors": false
+  },
+  "javascript": {
+    "formatter": {
+      "enabled": true,
+      "lineWidth": 120,
+      "quoteStyle": "single",
+      "semicolons": "asNeeded",
+      "trailingCommas": "es5"
+    }
+  },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "recommended": true,
+      "nursery": { "recommended": true }
+    }
+  },
+  "organizeImports": { "enabled": true },
+  "overrides": [
+    {
+      "include": ["src/components/Schedule.tsx"],
+      "linter": {
+        "rules": {
+          "suspicious": { "noArrayIndexKey": "off" }
+        }
+      }
+    }
+  ]
+}
